@@ -3,17 +3,12 @@ APP_NAME = "Clock"
 import tkinter as tk
 import time
 
-def run(root):
-    window = tk.Toplevel(root)
-    window.title("Clock")
-    window.geometry("300x200")
-
-    label = tk.Label(window, font=("Arial", 24))
+def run(parent):
+    label = tk.Label(parent, font=("Arial", 24))
     label.pack(pady=50)
 
-    def update_clock():
-        current_time = time.strftime("%H:%M:%S")
-        label.config(text=current_time)
-        window.after(1000, update_clock)
+    def update():
+        label.config(text=time.strftime("%H:%M:%S"))
+        parent.after(1000, update)
 
-    update_clock()
+    update()

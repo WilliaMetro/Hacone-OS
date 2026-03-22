@@ -1,26 +1,43 @@
 import os
 import importlib
 import tkinter as tk
-from tkinter import messagebox
 
 APPS_DIR = "apps"
 
 class PseudoOS:
     def __init__(self, root):
         self.root = root
-        self.root.title("Pseudo OS")
-        self.root.geometry("400x300")
+        self.root.title("Pseudo OS - XP Style")
+        self.root.geometry("600x400")
+        self.root.configure(bg="#3A6EA5")  # nền xanh XP
 
         self.apps = []
         self.selected_index = 0
 
         self.load_apps()
 
-        self.label = tk.Label(root, text="Pseudo OS Menu", font=("Arial", 16))
-        self.label.pack(pady=10)
+        # ===== Desktop Area =====
+        self.desktop = tk.Frame(root, bg="#3A6EA5")
+        self.desktop.pack(fill="both", expand=True)
 
-        self.menu_frame = tk.Frame(root)
-        self.menu_frame.pack(fill="both", expand=True)
+        # ===== Menu =====
+        self.menu_frame = tk.Frame(self.desktop, bg="#ECE9D8", width=200)
+        self.menu_frame.pack(side="left", fill="y")
+
+        self.content_frame = tk.Frame(self.desktop, bg="white")
+        self.content_frame.pack(side="right", fill="both", expand=True)
+
+        # ===== Taskbar =====
+        self.taskbar = tk.Frame(root, bg="#245EDB", height=30)
+        self.taskbar.pack(side="bottom", fill="x")
+
+        self.task_label = tk.Label(
+            self.taskbar,
+            text="Start",
+            bg="#245EDB",
+            fg="white"
+        )
+        self.task_label.pack(side="left", padx=10)
 
         self.draw_menu()
 
@@ -34,19 +51,15 @@ class PseudoOS:
         for file in os.listdir(APPS_DIR):
             if file.endswith(".py") and not file.startswith("__"):
                 module_name = file[:-3]
-                try:
-                    module = importlib.import_module(f"{APPS_DIR}.{module_name}")
+                module = importlib.import_module(f"{APPS_DIR}.{module_name}")
 
-                    if hasattr(module, "run"):
-                        name = getattr(module, "APP_NAME", module_name)
-                        self.apps.append({
-                            "name": name,
-                            "module": module
-                        })
-                except Exception as e:
-                    print(f"Error loading {file}: {e}")
+                if hasattr(module, "run"):
+                    name = getattr(module, "APP_NAME", module_name)
+                    self.apps.append({
+                        "name": name,
+                        "module": module
+                    })
 
-        # Add Exit option
         self.apps.append({"name": "Exit", "module": None})
 
     def draw_menu(self):
@@ -55,10 +68,10 @@ class PseudoOS:
 
         for i, app in enumerate(self.apps):
             if i == self.selected_index:
-                bg = "blue"
+                bg = "#316AC5"
                 fg = "white"
             else:
-                bg = "white"
+                bg = "#ECE9D8"
                 fg = "black"
 
             label = tk.Label(
@@ -68,7 +81,7 @@ class PseudoOS:
                 fg=fg,
                 anchor="w",
                 padx=10,
-                font=("Arial", 12)
+                pady=5
             )
             label.pack(fill="x")
 
@@ -80,6 +93,10 @@ class PseudoOS:
         self.selected_index = (self.selected_index + 1) % len(self.apps)
         self.draw_menu()
 
+    def clear_content(self):
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+
     def run_selected(self, event):
         app = self.apps[self.selected_index]
 
@@ -87,10 +104,13 @@ class PseudoOS:
             self.root.quit()
             return
 
+        self.clear_content()
+
         try:
-            app["module"].run(self.root)
+            # truyền content_frame thay vì root
+            app["module"].run(self.content_frame)
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            print(e)
 
 
 if __name__ == "__main__":

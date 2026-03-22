@@ -2,10 +2,6 @@ APP_NAME = "Hello App"
 
 import tkinter as tk
 
-def run(root):
-    window = tk.Toplevel(root)
-    window.title("Hello App")
-    window.geometry("300x200")
-
-    label = tk.Label(window, text="Hello, William!", font=("Arial", 14))
+def run(parent):
+    label = tk.Label(parent, text="Hello William!", font=("Arial", 16))
     label.pack(pady=50)
