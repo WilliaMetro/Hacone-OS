@@ -1,4 +1,4 @@
-APP_NAME = "Hello App"
+APP_NAME = "Hello"
 
 import tkinter as tk
 

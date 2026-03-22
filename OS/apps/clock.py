@@ -4,8 +4,8 @@ import tkinter as tk
 import time
 
 def run(parent):
-    label = tk.Label(parent, font=("Arial", 24))
-    label.pack(pady=50)
+    label = tk.Label(parent, font=("Arial", 20))
+    label.pack(pady=40)
 
     def update():
         label.config(text=time.strftime("%H:%M:%S"))

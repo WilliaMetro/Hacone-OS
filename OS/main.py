@@ -4,50 +4,82 @@ import tkinter as tk
 
 APPS_DIR = "apps"
 
-class PseudoOS:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Pseudo OS - XP Style")
-        self.root.geometry("600x400")
-        self.root.configure(bg="#3A6EA5")  # nền xanh XP
+class Window:
+    def __init__(self, parent, title):
+        self.parent = parent
 
-        self.apps = []
-        self.selected_index = 0
+        self.frame = tk.Frame(parent, bg="white", bd=2, relief="raised")
+        self.frame.place(x=100, y=100, width=300, height=200)
 
-        self.load_apps()
+        # Title bar
+        self.title_bar = tk.Frame(self.frame, bg="#245EDB", height=25)
+        self.title_bar.pack(fill="x")
 
-        # ===== Desktop Area =====
-        self.desktop = tk.Frame(root, bg="#3A6EA5")
-        self.desktop.pack(fill="both", expand=True)
-
-        # ===== Menu =====
-        self.menu_frame = tk.Frame(self.desktop, bg="#ECE9D8", width=200)
-        self.menu_frame.pack(side="left", fill="y")
-
-        self.content_frame = tk.Frame(self.desktop, bg="white")
-        self.content_frame.pack(side="right", fill="both", expand=True)
-
-        # ===== Taskbar =====
-        self.taskbar = tk.Frame(root, bg="#245EDB", height=30)
-        self.taskbar.pack(side="bottom", fill="x")
-
-        self.task_label = tk.Label(
-            self.taskbar,
-            text="Start",
+        self.title_label = tk.Label(
+            self.title_bar,
+            text=title,
             bg="#245EDB",
             fg="white"
         )
-        self.task_label.pack(side="left", padx=10)
+        self.title_label.pack(side="left", padx=5)
 
-        self.draw_menu()
+        self.close_btn = tk.Button(
+            self.title_bar,
+            text="X",
+            bg="red",
+            fg="white",
+            command=self.close
+        )
+        self.close_btn.pack(side="right")
 
-        self.root.bind("<Up>", self.move_up)
-        self.root.bind("<Down>", self.move_down)
-        self.root.bind("<Return>", self.run_selected)
+        # Content
+        self.content = tk.Frame(self.frame, bg="white")
+        self.content.pack(fill="both", expand=True)
+
+        # Drag
+        self.title_bar.bind("<B1-Motion>", self.drag)
+
+    def drag(self, event):
+        x = self.frame.winfo_x() + event.x
+        y = self.frame.winfo_y() + event.y
+        self.frame.place(x=x, y=y)
+
+    def close(self):
+        self.frame.destroy()
+
+
+class PseudoOS:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("XP OS")
+        self.root.geometry("800x500")
+
+        self.apps = []
+
+        # Desktop
+        self.desktop = tk.Frame(root, bg="#3A6EA5")
+        self.desktop.pack(fill="both", expand=True)
+
+        # Taskbar
+        self.taskbar = tk.Frame(root, bg="#245EDB", height=30)
+        self.taskbar.pack(side="bottom", fill="x")
+
+        self.start_btn = tk.Button(
+            self.taskbar,
+            text="Start",
+            bg="#3A6EA5",
+            fg="white",
+            command=self.toggle_start
+        )
+        self.start_btn.pack(side="left")
+
+        self.start_menu = tk.Frame(root, bg="#ECE9D8", width=200, height=300)
+
+        self.load_apps()
+        self.draw_desktop_icons()
+        self.draw_start_menu()
 
     def load_apps(self):
-        self.apps.clear()
-
         for file in os.listdir(APPS_DIR):
             if file.endswith(".py") and not file.startswith("__"):
                 module_name = file[:-3]
@@ -60,55 +92,49 @@ class PseudoOS:
                         "module": module
                     })
 
-        self.apps.append({"name": "Exit", "module": None})
-
-    def draw_menu(self):
-        for widget in self.menu_frame.winfo_children():
-            widget.destroy()
-
+    # ===== Desktop Icons =====
+    def draw_desktop_icons(self):
         for i, app in enumerate(self.apps):
-            if i == self.selected_index:
-                bg = "#316AC5"
-                fg = "white"
-            else:
-                bg = "#ECE9D8"
-                fg = "black"
-
-            label = tk.Label(
-                self.menu_frame,
+            btn = tk.Button(
+                self.desktop,
                 text=app["name"],
-                bg=bg,
-                fg=fg,
-                anchor="w",
-                padx=10,
-                pady=5
+                width=12,
+                height=2,
+                command=lambda a=app: self.open_app(a)
             )
-            label.pack(fill="x")
+            btn.place(x=20, y=20 + i * 70)
 
-    def move_up(self, event):
-        self.selected_index = (self.selected_index - 1) % len(self.apps)
-        self.draw_menu()
+    # ===== Start Menu =====
+    def draw_start_menu(self):
+        for app in self.apps:
+            btn = tk.Button(
+                self.start_menu,
+                text=app["name"],
+                anchor="w",
+                command=lambda a=app: self.open_app(a)
+            )
+            btn.pack(fill="x")
 
-    def move_down(self, event):
-        self.selected_index = (self.selected_index + 1) % len(self.apps)
-        self.draw_menu()
+        exit_btn = tk.Button(
+            self.start_menu,
+            text="Exit",
+            bg="red",
+            fg="white",
+            command=self.root.quit
+        )
+        exit_btn.pack(fill="x")
 
-    def clear_content(self):
-        for widget in self.content_frame.winfo_children():
-            widget.destroy()
+    def toggle_start(self):
+        if self.start_menu.winfo_ismapped():
+            self.start_menu.place_forget()
+        else:
+            self.start_menu.place(x=0, y=200)
 
-    def run_selected(self, event):
-        app = self.apps[self.selected_index]
-
-        if app["name"] == "Exit":
-            self.root.quit()
-            return
-
-        self.clear_content()
-
+    # ===== Open App =====
+    def open_app(self, app):
+        window = Window(self.desktop, app["name"])
         try:
-            # truyền content_frame thay vì root
-            app["module"].run(self.content_frame)
+            app["module"].run(window.content)
         except Exception as e:
             print(e)
 
